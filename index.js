@@ -2,8 +2,8 @@ const express = require("express");
 const fs = require("fs");
 const resolve = require("path").resolve;
 const puppeteer = require("puppeteer");
-const consoleColor = require("./utils/consoleColors");
-consoleColor();
+const consoleColors = require("console-colors");
+consoleColors();
 
 const { minify } = require("html-minifier-terser");
 
@@ -82,7 +82,6 @@ async function createNewHTMLPage(route, htmlData, dir) {
     path = fileExists ? path : `${dir}${fileName.replace(".html", "")}`;
 
     const htmlPath = fileExists ? `${path}/index.html` : `${path}.html`;
-
 
     const miniHtml = await minify(html, {
       removeAttributeQuotes: true,
@@ -236,7 +235,7 @@ async function run(config) {
 
   await createFolders(options.buildDirectory, foldersPaths);
 
-  if (options.seo) {
+  if (options.seo != false) {
     if (r.indexOf("/") == -1) {
       routes = ["/404", ...r];
     } else {

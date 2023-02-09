@@ -20,7 +20,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "html-minifier-terser": "^7.1.0",
-    "puppeteer": "^19.6.3"
+    "puppeteer": "^19.6.3",
+    "console-colors": "git+https://github.com/gugacarbo/console-colors.git"
   },
   "keywords": [
     "react",
