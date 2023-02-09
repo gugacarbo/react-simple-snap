@@ -236,8 +236,15 @@ async function run(config) {
     "white",
     "bright"
   );
-
+ 
   const options = config || (await readOptionsFromFile());
+
+  console.color(
+    "User Agent " + options.engine.gotoOptions.userAgent,
+    "black",
+    "cyan",
+    "blue"
+  );
 
   let r = options.routes;
   let routes;
