@@ -19,12 +19,12 @@ let app;
  */
 async function readOptionsFromFile() {
   try {
-    const config = await fs.readFileSync("./.rsp.json");
+    const config = await fs.readFileSync("./.snap.json");
     const options = normalizeRspOptions(JSON.parse(config.toString()));
     return options;
   } catch (err) {
     throw new Error(
-      `Error: Failed to read options from '.rsp.json'.\nMessage: ${err}`
+      `Error: Failed to read options from '.snap.json'.\nMessage: ${err}`
     );
   }
 }
