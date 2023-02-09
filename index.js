@@ -202,7 +202,7 @@ async function runPuppeteer(baseUrl, routes, dir, engine) {
   for (let i = 0; i < routes.length; i++) {
     try {
       console.color(
-        `Route "${routes[i]}" [s:reverse][s:bright] [${i + 1}/${routes.length}]`,
+        `[s:bright]Route "${routes[i]}" [s:reverse] [${i + 1}/${routes.length}]`,
         "white",
         "cyan",
         "execution"

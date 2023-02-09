@@ -12,7 +12,7 @@ module.exports = function (options) {
   return {
     routes: options.routes || [],
     port: options.port || 3000,
-    buildDirectory: options.buildDirectory || './build',
+    buildDirectory: options.buildDirectory || './dist',
     engine
   };
 };
