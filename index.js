@@ -125,17 +125,19 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
     if (options?.userAgent) await page.setUserAgent(options.userAgent);
 
     page.on("console", (msg) => {
+      console.color('', "black", "black", "info", "hidden");
       console.color(
         `Route '${pageUrl.slice(
           pageUrl.lastIndexOf("/"),
           pageUrl.length
         )}' Say:`,
-        "black",
+        "white",
+        "gray",
         "yellow",
-        "yellow",
-        "blink"
+        "bright"
       );
-      console.color(msg.text(), "black", "white", "yellow", "bright");
+      console.color(`>> ${msg.text()}`, "black", "white", "yellow");
+      console.color('', "black", "black", "info", "hidden");
     });
 
     await page.goto(
@@ -169,7 +171,7 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
 async function runPuppeteer(baseUrl, routes, dir, engine) {
   const browser = await puppeteer.launch(engine.launchOptions);
   console.color(
-    `Processing routes [0/${routes.length}]`,
+    `Processing routes [s:reverse][s:bright] [0/${routes.length}]`,
     "white",
     "blue",
     "execution"
@@ -179,7 +181,7 @@ async function runPuppeteer(baseUrl, routes, dir, engine) {
     fs.copyFile(`${dir}/index.html`, `${dir}/200.html`, (err) => {
       if (err) {
         console.color(
-          "Error on Create 202.html:",
+          "Error on Create 200.html:",
           "red",
           "white",
           "error",
@@ -187,7 +189,7 @@ async function runPuppeteer(baseUrl, routes, dir, engine) {
         );
       } else {
         console.color(
-          `Created /200.html`,
+          `Created [s:bright] /200.html`,
           "white",
           "green",
           "success",
@@ -200,7 +202,7 @@ async function runPuppeteer(baseUrl, routes, dir, engine) {
   for (let i = 0; i < routes.length; i++) {
     try {
       console.color(
-        `Route [${i + 1}/${routes.length}] "${routes[i]}" `,
+        `Route "${routes[i]}" [s:reverse][s:bright] [${i + 1}/${routes.length}]`,
         "white",
         "cyan",
         "execution"
@@ -236,14 +238,16 @@ async function run(config) {
     "white",
     "bright"
   );
- 
+
   const options = config || (await readOptionsFromFile());
 
+  options.engine.gotoOptions.userAgent =
+    options.engine.gotoOptions.userAgent ?? "snapshoter";
   console.color(
-    "User Agent " + options.engine.gotoOptions.userAgent,
-    "black",
+    `User Agent [s:reverse] ${options.engine.gotoOptions.userAgent} `,
+    "white",
     "cyan",
-    "blue"
+    "white"
   );
 
   let r = options.routes;
