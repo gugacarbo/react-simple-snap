@@ -5,6 +5,8 @@ const puppeteer = require("puppeteer");
 const consoleColor = require("./utils/consoleColors");
 consoleColor();
 
+const { minify } = require("html-minifier-terser");
+
 const {
   normalizeRspOptions,
   ensureDirExists,
@@ -60,8 +62,10 @@ async function runStaticServer(port, routes, dir) {
  * @param {string} html
  * @param {string} dir
  */
-async function createNewHTMLPage(route, html, dir, seo = true) {
+async function createNewHTMLPage(route, htmlData, dir) {
   try {
+    const [html, screenshot] = htmlData;
+
     if (route.indexOf("/") !== route.lastIndexOf("/")) {
       const subDir = route.slice(0, route.lastIndexOf("/"));
       await ensureDirExists(`${dir}${subDir}`);
@@ -69,26 +73,36 @@ async function createNewHTMLPage(route, html, dir, seo = true) {
 
     const fileName = getValidatedFileName(route);
 
-    await fs.writeFileSync(`${dir}${fileName}`, html, {
+    let path = `${dir}${fileName}`;
+
+    path = path.slice(0, path.indexOf(".html"));
+
+    const fileExists = await fs.existsSync(path);
+
+    path = fileExists ? path : `${dir}${fileName.replace(".html", "")}`;
+
+    const htmlPath = fileExists ? `${path}/index.html` : `${path}.html`;
+
+
+    const miniHtml = await minify(html, {
+      removeAttributeQuotes: true,
+    });
+
+    await fs.writeFileSync(`${htmlPath}`, miniHtml, {
       encoding: "utf-8",
       flag: "w",
     });
 
-    console.color(`Created ${fileName}`, "white", "green", "success");
+    const screenshotPath = fileExists
+      ? `${path}/screenshot.png`
+      : `${path}.png`;
 
-    if (seo && fileName == "/index.html") {
-      await fs.writeFileSync(`${dir}/200.html`, html, {
-        encoding: "utf-8",
-        flag: "w",
-      });
-      console.color(
-        `Created /200.html`,
-        "white",
-        "green",
-        "success",
-        "reverse"
-      );
-    }
+    await fs.writeFileSync(`${screenshotPath}`, screenshot, {
+      encoding: "base64",
+      flag: "w",
+    });
+
+    console.color(`Created ${fileName}`, "white", "green", "success");
   } catch (err) {
     console.color(
       `Error: Failed to create HTML page for ${route}.\n`,
@@ -113,13 +127,18 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
 
     await page.goto(
       pageUrl,
-      Object.assign({ waitUntil: "networkidle0" }, options)
+      Object.assign({ waitUntil: options.waitUntil ?? "networkidle0" }, options)
     );
 
     const html = await page.content();
     if (!html) return 0;
 
-    return html;
+    const screenshot = await page.screenshot({
+      encoding: "base64",
+      type: "png",
+    });
+
+    return [html, screenshot];
   } catch (err) {
     throw new Error(
       `Error: Failed to build HTML for ${pageUrl}.\nMessage: ${err}`
@@ -142,6 +161,29 @@ async function runPuppeteer(baseUrl, routes, dir, engine) {
     "blue",
     "execution"
   );
+
+  if (engine.seo) {
+    fs.copyFile(`${dir}/index.html`, `${dir}/200.html`, (err) => {
+      if (err) {
+        console.color(
+          "Error on Create 202.html:",
+          "red",
+          "white",
+          "error",
+          "blink"
+        );
+      } else {
+        console.color(
+          `Created /200.html`,
+          "white",
+          "green",
+          "success",
+          "reverse"
+        );
+      }
+    });
+  }
+
   for (let i = 0; i < routes.length; i++) {
     try {
       console.color(
@@ -150,13 +192,13 @@ async function runPuppeteer(baseUrl, routes, dir, engine) {
         "cyan",
         "execution"
       );
-      const html = await getHTMLfromPuppeteerPage(
+      const htmlData = await getHTMLfromPuppeteerPage(
         browser,
         `${baseUrl}${routes[i]}`,
         engine.gotoOptions
       );
 
-      if (html) createNewHTMLPage(routes[i], html, dir, engine.seo);
+      if (htmlData[0]) createNewHTMLPage(routes[i], htmlData, dir);
       else return 0;
     } catch (err) {
       console.color(
@@ -186,7 +228,15 @@ async function run(config) {
 
   let r = options.routes;
   let routes;
-  if (options.seo != false) {
+
+  const foldersPaths = [
+    ...r,
+    // "/screenshot"
+  ];
+
+  await createFolders(options.buildDirectory, foldersPaths);
+
+  if (options.seo) {
     if (r.indexOf("/") == -1) {
       routes = ["/404", ...r];
     } else {
@@ -204,13 +254,15 @@ async function run(config) {
   );
 
   if (!staticServerURL) return 0;
-  options.engine.seo = options.seo;
+
   await runPuppeteer(
     staticServerURL,
     routes,
     options.buildDirectory,
+    Object.assign({ seo: options.seo ?? "true" }, options.engine),
     options.engine
   );
+
   console.color(
     "Finish react-spa-prerender tasks!",
     "white",
@@ -224,3 +276,11 @@ async function run(config) {
 module.exports = {
   run,
 };
+
+async function createFolders(base, paths) {
+  await paths.forEach(async (route) => {
+    await fs.mkdirSync(`${base}${route}`, { recursive: true }, async (err) => {
+      if (err) throw err;
+    });
+  });
+}
