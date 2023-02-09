@@ -2,7 +2,8 @@ const express = require("express");
 const fs = require("fs");
 const resolve = require("path").resolve;
 const puppeteer = require("puppeteer");
-
+const consoleColor = require("./utils/consoleColors");
+consoleColor();
 
 const {
   normalizeRspOptions,
@@ -223,4 +224,3 @@ async function run(config) {
 module.exports = {
   run,
 };
-

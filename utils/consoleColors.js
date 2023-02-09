@@ -1,6 +1,4 @@
-() => {
-  global.console.color = consolePrettier;
-};
+module.exports = () => (global.console.color = consolePrettier);
 
 function consolePrettier(
   msg,
