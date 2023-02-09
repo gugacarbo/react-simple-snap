@@ -124,6 +124,20 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
     const page = await browser.newPage();
     if (options?.userAgent) await page.setUserAgent(options.userAgent);
 
+    page.on("console", (msg) => {
+      console.color(
+        `Route '${pageUrl.slice(
+          pageUrl.lastIndexOf("/"),
+          pageUrl.length
+        )}' Say:`,
+        "black",
+        "yellow",
+        "yellow",
+        "blink"
+      );
+      console.color(msg.text(), "black", "white", "yellow", "bright");
+    });
+
     await page.goto(
       pageUrl,
       Object.assign({ waitUntil: options.waitUntil ?? "networkidle0" }, options)
