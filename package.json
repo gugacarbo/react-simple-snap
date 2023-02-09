@@ -1,0 +1,46 @@
+{
+  "name": "react-simple-snap",
+  "version": "1.0.0",
+  "description": "React library for prerendering static pages (snapshots), optimize SEO and web performance, Vite compatible!",
+  "main": "index.js",
+  "repository": "https://github.com/gugacarbo/react-simple-snap",
+  "author": "Gustavo Carbonera",
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "react-spa-prerender": "./run.js"
+  },
+  "files": [
+    "index.js",
+    "run.js",
+    "utils"
+  ],
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^19.6.3"
+  },
+  "keywords": [
+    "react",
+    "react-static",
+    "react-spa",
+    "react-spa-prerender",
+    "react-postbuild",
+    "postbuild",
+    "react-postbuild",
+    "react-prerender",
+    "react-static-pages",
+    "react-snapshot",
+    "react-snap",
+    "seo",
+    "react-seo",
+    "react static",
+    "react static site generator",
+    "ssg",
+    "react-ssg",
+    "prerender",
+    "snapshot",
+    "vite"
+  ]
+}
