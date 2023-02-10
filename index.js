@@ -2,8 +2,8 @@ const express = require("express");
 const fs = require("fs");
 const resolve = require("path").resolve;
 const puppeteer = require("puppeteer");
-const consoleColors = require("console-colors");
-consoleColors();
+const vibrantConsole = require("vibrant-console");
+vibrantConsole();
 
 const { minify } = require("html-minifier-terser");
 
@@ -171,7 +171,7 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
 async function runPuppeteer(baseUrl, routes, dir, engine) {
   const browser = await puppeteer.launch(engine.launchOptions);
   console.color(
-    `Processing routes [s:reverse][s:bright] [0/${routes.length}]`,
+    `[s:bright]Processing routes [s:reverse] [0/${routes.length}]`,
     "white",
     "blue",
     "execution"
