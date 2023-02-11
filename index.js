@@ -70,7 +70,11 @@ async function saveHtmlFile(route, htmlData, dir, options) {
 
     const htmlPath = isSubFolder ? `${path}/index.html` : `${path}.html`;
     const miniHtml = await minify(html, {
-      removeAttributeQuotes: true,
+      collapseWhitespace: true,
+      minifyCSS: true,
+      minifyJS: true,
+      removeComments: true,
+      userAgent: options.userAgent,
     });
     await fs.writeFileSync(`${htmlPath}`, miniHtml, {
       encoding: "utf-8",
@@ -277,7 +281,8 @@ async function run(config) {
     "green",
     "bright"
   );
-  return "pre-render-end";
+
+  process.exit("pre-render-end");
 }
 
 module.exports = {
