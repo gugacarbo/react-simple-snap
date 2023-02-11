@@ -1,14 +1,15 @@
-const fs = require('fs');
+const fs = require("fs");
 
 /**
- * 
- * @param {string} dir 
+ *
+ * @param {string} dir
  * @returns {Promise}
  */
-module.exports = function(dir) {
+module.exports = async function (dir) {
   try {
-    return fs.mkdirSync(dir, {recursive: true});
+    return await fs.mkdirSync(dir, { recursive: true });
   } catch (err) {
-    throw new Error(`Error: Failed to create directory for path ${dir}.\nMessage: ${err}`);
+    console.error(`Failed to create directory for path ${dir}`);
+    throw new Error(`${err}`);
   }
-}
+};

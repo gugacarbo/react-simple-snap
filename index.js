@@ -2,34 +2,18 @@ const express = require("express");
 const fs = require("fs");
 const resolve = require("path").resolve;
 const puppeteer = require("puppeteer");
+const { minify } = require("html-minifier-terser");
 const vibrantConsole = require("vibrant-console");
 vibrantConsole();
-
-const { minify } = require("html-minifier-terser");
-
 const {
-  normalizeRspOptions,
+  readOptionsFromFile,
   ensureDirExists,
   getValidatedFileName,
 } = require("./utils");
 let app;
 
 /**
- * @returns {object}
- */
-async function readOptionsFromFile() {
-  try {
-    const config = await fs.readFileSync("./.snap.json");
-    const options = normalizeRspOptions(JSON.parse(config.toString()));
-    return options;
-  } catch (err) {
-    throw new Error(
-      `Error: Failed to read options from '.snap.json'.\nMessage: ${err}`
-    );
-  }
-}
-
-/**
+ * !Run Server
  * @param {number} port
  * @param {string} routes
  * @param {string} dir
@@ -43,16 +27,14 @@ async function runStaticServer(port, routes, dir) {
     routes.forEach((route) => {
       app.get(route, (req, res) => {
         res.sendFile(`${resolvedPath}/index.html`);
-        1;
       });
     });
 
     await app.listen(port);
     return `http://localhost:${port}`;
   } catch (err) {
-    throw new Error(
-      `Error: Failed to run puppeteer server on port ${port}.\nMessage: ${err}`
-    );
+    console.error(`Error: Failed to run puppeteer server on port ${port}`);
+    throw new Error(`\nMessage: ${err}`);
   }
 }
 
@@ -62,46 +44,45 @@ async function runStaticServer(port, routes, dir) {
  * @param {string} html
  * @param {string} dir
  */
-async function createNewHTMLPage(route, htmlData, dir) {
+async function saveHtmlFile(route, htmlData, dir, options) {
   try {
-    const [html, screenshot] = htmlData;
+    const { html, screenshot } = htmlData;
 
     if (route.indexOf("/") !== route.lastIndexOf("/")) {
       const subDir = route.slice(0, route.lastIndexOf("/"));
       await ensureDirExists(`${dir}${subDir}`);
     }
-
     const fileName = getValidatedFileName(route);
 
     let path = `${dir}${fileName}`;
+    path = path.replace(/\..*/, "");
 
-    path = path.slice(0, path.indexOf(".html"));
+    const isSubFolder = await fs.existsSync(path);
 
-    const fileExists = await fs.existsSync(path);
+    path = isSubFolder ? path : `${dir}${fileName.replace(/\..*/, "")}`;
 
-    path = fileExists ? path : `${dir}${fileName.replace(".html", "")}`;
-
-    const htmlPath = fileExists ? `${path}/index.html` : `${path}.html`;
-
+    const htmlPath = isSubFolder ? `${path}/index.html` : `${path}.html`;
     const miniHtml = await minify(html, {
       removeAttributeQuotes: true,
     });
-
     await fs.writeFileSync(`${htmlPath}`, miniHtml, {
       encoding: "utf-8",
       flag: "w",
     });
 
-    const screenshotPath = fileExists
-      ? `${path}/screenshot.png`
-      : `${path}.png`;
+    if (options.screenshot) {
+      const screenshotPath = !isSubFolder // rootFolder
+        ? `${path}.png`
+        : typeof options.screenshot == "string"
+        ? `${dir}/screenshots/${fileName.replace(/\..*/, "")}.png`
+        : `${path}/screenshot.png`;
 
-    await fs.writeFileSync(`${screenshotPath}`, screenshot, {
-      encoding: "base64",
-      flag: "w",
-    });
-
-    console.color(`Created ${fileName}`, "white", "green", "success");
+      await fs.writeFileSync(`${screenshotPath}`, screenshot, {
+        encoding: "base64",
+        flag: "w",
+      });
+    }
+    console.success(`Created ${fileName}`);
   } catch (err) {
     console.color(
       `Error: Failed to create HTML page for ${route}.\n`,
@@ -112,7 +93,6 @@ async function createNewHTMLPage(route, htmlData, dir) {
     throw new Error(err);
   }
 }
-
 /**
  * @param {object} browser
  * @param {string} pageUrl
@@ -121,43 +101,29 @@ async function createNewHTMLPage(route, htmlData, dir) {
  */
 async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
   try {
+    let screenshot = "";
+    let html = "";
     const page = await browser.newPage();
+
     if (options?.userAgent) await page.setUserAgent(options.userAgent);
+    await enableLogging(page);
 
-    page.on("console", (msg) => {
-      console.color('', "black", "black", "info", "hidden");
-      console.color(
-        `Route '${pageUrl.slice(
-          pageUrl.lastIndexOf("/"),
-          pageUrl.length
-        )}' Say:`,
-        "white",
-        "gray",
-        "yellow",
-        "bright"
-      );
-      console.color(`>> ${msg.text()}`, "black", "white", "yellow");
-      console.color('', "black", "black", "info", "hidden");
-    });
+    await page.goto(pageUrl, options);
 
-    await page.goto(
-      pageUrl,
-      Object.assign({ waitUntil: options.waitUntil ?? "networkidle0" }, options)
-    );
-
-    const html = await page.content();
+    html = await page.content();
     if (!html) return 0;
 
-    const screenshot = await page.screenshot({
-      encoding: "base64",
-      type: "png",
-    });
+    if (options.screenshot) {
+      screenshot = await page.screenshot({
+        encoding: "base64",
+        type: "png",
+      });
+    }
 
-    return [html, screenshot];
+    return { html, screenshot };
   } catch (err) {
-    throw new Error(
-      `Error: Failed to build HTML for ${pageUrl}.\nMessage: ${err}`
-    );
+    console.error(`Failed to build HTML for ${pageUrl}.`);
+    throw new Error(err);
   }
 }
 
@@ -180,54 +146,38 @@ async function runPuppeteer(baseUrl, routes, dir, engine) {
   if (engine.seo) {
     fs.copyFile(`${dir}/index.html`, `${dir}/200.html`, (err) => {
       if (err) {
-        console.color(
-          "Error on Create 200.html:",
-          "red",
-          "white",
-          "error",
-          "blink"
-        );
+        console.error("On Create 200.html:");
+        throw new Error(err);
       } else {
-        console.color(
-          `Created [s:bright] /200.html`,
-          "white",
-          "green",
-          "success",
-          "reverse"
-        );
+        console.success(`Created [s:bright][s:reverse] /200.html`);
       }
     });
   }
 
-  for (let i = 0; i < routes.length; i++) {
+  routes.map(async (route, i) => {
     try {
       console.color(
-        `[s:bright]Route "${routes[i]}" [s:reverse] [${i + 1}/${routes.length}]`,
+        `[s:bright]Route "${route}" [s:reverse] [${i + 1}/${routes.length}]`,
         "white",
         "cyan",
         "execution"
       );
       const htmlData = await getHTMLfromPuppeteerPage(
         browser,
-        `${baseUrl}${routes[i]}`,
+        `${baseUrl}${route}`,
         engine.gotoOptions
       );
 
-      if (htmlData[0]) createNewHTMLPage(routes[i], htmlData, dir);
+      if (htmlData.html) saveHtmlFile(route, htmlData, dir, engine.gotoOptions);
       else return 0;
     } catch (err) {
-      console.color(
-        `Error: Failed to process route '${routes[i]}'`,
-        "white",
-        "red",
-        "error"
-      );
+      console.error(`Failed to process route '${route}'`);
       throw new Error(err);
     }
-  }
+  });
 
   await browser.close();
-  return;
+  return true;
 }
 
 async function run(config) {
@@ -241,8 +191,6 @@ async function run(config) {
 
   const options = config || (await readOptionsFromFile());
 
-  options.engine.gotoOptions.userAgent =
-    options.engine.gotoOptions.userAgent ?? "snapshoter";
   console.color(
     `User Agent [s:reverse] ${options.engine.gotoOptions.userAgent} `,
     "white",
@@ -250,40 +198,46 @@ async function run(config) {
     "white"
   );
 
-  let r = options.routes;
-  let routes;
+  const screenshotOption = options.engine.gotoOptions.screenshot;
 
-  const foldersPaths = [
-    ...r,
-    // "/screenshot"
-  ];
+  let routes = options.routes;
+  let foldersPaths = options.routes;
 
-  await createFolders(options.buildDirectory, foldersPaths);
+  screenshotOption &&
+    typeof screenshotOption == "string" &&
+    foldersPaths.push(screenshotOption);
 
-  if (options.seo != false) {
-    if (r.indexOf("/") == -1) {
-      routes = ["/404", ...r];
+  foldersPaths.forEach(
+    async (route) => await ensureDirExists(`${options.buildDirectory}${route}`)
+  );
+
+  //insert "/index.html" and "/404.html" files
+  if (options.seo) {
+    if (routes.indexOf("/")) {
+      routes.splice(routes.indexOf("/"), 1);
+      routes = ["/", "/404", ...routes];
     } else {
-      const index = r.indexOf("/");
-      r.splice(index, 1);
-      routes = ["/", "/404", ...r];
+      routes = ["/404", ...routes];
     }
-  } else {
-    routes = r;
   }
+
+  //exclude routes from prerenderings
+  if (options.excludedRoutes.length > 0) {
+    const excludedRoutes = options.excludedRoutes;
+    routes = routes.filter((e) => excludedRoutes.indexOf(e) == -1);
+  }
+
   const staticServerURL = await runStaticServer(
     options.port,
     routes,
     options.buildDirectory
   );
 
-  if (!staticServerURL) return 0;
-
+  if (!staticServerURL) return 503;
   await runPuppeteer(
     staticServerURL,
     routes,
     options.buildDirectory,
-    Object.assign({ seo: options.seo ?? "true" }, options.engine),
     options.engine
   );
 
@@ -301,10 +255,67 @@ module.exports = {
   run,
 };
 
-async function createFolders(base, paths) {
-  await paths.forEach(async (route) => {
-    await fs.mkdirSync(`${base}${route}`, { recursive: true }, async (err) => {
-      if (err) throw err;
-    });
+/**
+ * ! Puppeteer Page Log
+ * @param {{page: Page, options: {sourceMaps: boolean}, route: string, onError: ?function }} opt
+ * @return {void}
+ */
+const enableLogging = async (opt) => {
+  const { page, pageUrl, onError } = opt;
+  const route = pageUrl.slice(pageUrl.lastIndexOf("/"), pageUrl.length);
+  // const route = pageUrl;
+
+  page.on("console", (msg) => {
+    const text = msg.text();
+
+    console.color("", "black", "black", "info", "hidden");
+
+    if (text === "JSHandle@object") {
+      console.color(`Route '${route}' Say:`, "white", "black", "info");
+      Promise.all(msg.args().map(objectToJson)).then((args) =>
+        console.color(`>> ${args}`, "black", "white", "yellow")
+      );
+    } else if (text === "JSHandle@error") {
+      console.error(`Route '${route}' Error:`);
+      Promise.all(msg.args().map(errorToString)).then((args) =>
+        console.error(`>> ${args}`)
+      );
+    } else {
+      console.color(`Route '${route}' Say:`, "white", "black", "info");
+      console.color(`>> ${text}`, "white", "black", "info");
+    }
+    console.color("", "black", "black", "info", "hidden");
   });
-}
+
+  page.on("error", (msg) => {
+    console.color("", "black", "black", "info", "hidden");
+    console.error(`At ${route}:`);
+    console.error(`${msg}`);
+    console.color("", "black", "black", "info", "hidden");
+    onError && onError();
+  });
+
+  page.on("pageerror", (e) => {
+    console.color("", "black", "black", "info", "hidden");
+    console.error(`At ${route}`);
+    console.error(`${e}`);
+    console.color("", "black", "black", "info", "hidden");
+    onError && onError();
+  });
+
+  page.on("response", (response) => {
+    if (response.status() >= 300) {
+      console.error("", "black", "black", "info", "hidden");
+      console.error(
+        `️️️warning at ${route}: got ${response.status()} HTTP code for ${response.url()}`
+      );
+      console.error(`${msg}`);
+      console.color("", "black", "black", "info", "hidden");
+      onError && onError();
+    }
+  });
+  page.on("requestfailed", (msg) => {
+    console.error(`${route} requestfailed:`);
+    console.error(`${msg}`);
+  });
+};

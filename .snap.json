@@ -1,0 +1,10 @@
+{
+  "buildDirectory": "/testas",
+  "engine": {
+    "gotoOptions": {
+      "userAgent": "simple-snap",
+      "waitUntil": "load"
+    }
+  },
+  "routes": ["/"]
+}
