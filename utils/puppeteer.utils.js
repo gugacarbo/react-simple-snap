@@ -19,8 +19,8 @@ const enableLogging = async (page, pageUrl, onError) => {
       );
     } else if (text === "JSHandle@error") {
       console.error(`Route '${route}' Error:`);
-      Promise.all(msg.args().map(errorToString)).then((args) =>
-        console.error(`>> ${args}`)
+      Promise.all(
+        msg.args().map((args) => console.error(`>> ${args.message}`))
       );
     } else {
       console.color(`Route '${route}' Say:`, "white", "black", "info");

@@ -1,4 +1,8 @@
 const { enableLogging } = require("./puppeteer.utils");
+const normalizePath = (path) => (path === "/" ? "/" : path.replace(/\/$/, ""));
+
+
+
 
 module.exports = {
   normalizeRspOptions: require("./normalizeRspOptions"),
@@ -6,4 +10,5 @@ module.exports = {
   getValidatedFileName: require("./getValidatedFileName"),
   readOptionsFromFile: require("./readOptionsFromFile"),
   enableLogging,
+  normalizePath,
 };

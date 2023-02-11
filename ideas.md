@@ -4,7 +4,7 @@
 ## normalizePath
 
 ```js
-const normalizePath = (path) => (path === "/" ? "/" : path.replace(/\/$/, ""));
+
 ```
 
 ## Css

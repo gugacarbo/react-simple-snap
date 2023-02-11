@@ -1,9 +1,12 @@
 const express = require("express");
 const fs = require("fs");
+const fse = require("fs-extra");
 const resolve = require("path").resolve;
 const puppeteer = require("puppeteer");
 const { minify } = require("html-minifier-terser");
+const minimalcss = require("minimalcss");
 const vibrantConsole = require("vibrant-console");
+
 vibrantConsole();
 const {
   readOptionsFromFile,
@@ -20,6 +23,9 @@ let app;
  * @param {string} dir
  * @returns {string|boolean}
  */
+
+const isOk = (response) => response.ok() || response.status() === 304;
+
 async function runStaticServer(port, routes, dir) {
   try {
     app = express();
@@ -86,12 +92,12 @@ async function saveHtmlFile(route, htmlData, dir, options) {
     console.success(`Created ${fileName}`);
   } catch (err) {
     console.color(
-      `Error: Failed to create HTML page for ${route}.\n`,
+      `Error: Failed to save HTML page for ${route}.\n`,
       "white",
       "black",
       "error"
     );
-    throw new Error(err);
+    throw new Error(`Error on save Html ${err}`);
   }
 }
 /**
@@ -104,13 +110,28 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
   try {
     let screenshot = "";
     let html = "";
+    let css = "";
     const page = await browser.newPage();
 
     if (options?.userAgent) await page.setUserAgent(options.userAgent);
 
     await enableLogging(page, pageUrl, () => console.error("Error-End"));
 
+    css = await getCss({ pageUrl, browser, options });
+
     await page.goto(pageUrl, options);
+
+    await page.evaluate((css) => {
+      if (!css) return;
+      const head = document.head || document.getElementsByTagName("head")[0],
+        style = document.createElement("style");
+      style.type = "text/css";
+      style.appendChild(document.createTextNode(css));
+
+      if (!head) throw new Error("No <head> element found in document");
+
+      head.appendChild(style);
+    }, css);
 
     html = await page.content();
     if (!html) return 0;
@@ -125,7 +146,7 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
     return { html, screenshot };
   } catch (err) {
     console.error(`Failed to build HTML for ${pageUrl}.`);
-    throw new Error(err);
+    throw new Error(`Failed to build HTML for ${err}.`);
   }
 }
 
@@ -136,7 +157,7 @@ async function getHTMLfromPuppeteerPage(browser, pageUrl, options) {
  * @param {object} engine
  * @returns {number|undefined}
  */
-async function runPuppeteer(baseUrl, routes, dir, outDir, engine) {
+async function runPuppeteer(baseUrl, routes, outDir, engine) {
   const browser = await puppeteer.launch(engine.launchOptions);
 
   console.color(
@@ -145,17 +166,6 @@ async function runPuppeteer(baseUrl, routes, dir, outDir, engine) {
     "blue",
     "execution"
   );
-
-  if (engine.seo) {
-    fs.copyFile(`${dir}/index.html`, `${outDir}/200.html`, (err) => {
-      if (err) {
-        console.error("On Create 200.html:");
-        throw new Error(err);
-      } else {
-        console.success(`Created [s:bright][s:reverse] /200.html`);
-      }
-    });
-  }
 
   for (let i = 0; i < routes.length; i++) {
     try {
@@ -178,14 +188,15 @@ async function runPuppeteer(baseUrl, routes, dir, outDir, engine) {
       else return 0;
     } catch (err) {
       console.error(`Failed to process route '${routes[i]}'`);
-      throw new Error(err);
+      throw new Error(`Page Processing Error${err}`);
     }
   }
 
   await browser.close();
-  return true;
+  return "pages-processed";
 }
 
+//* run()
 async function run(config) {
   console.color(
     "Start  react-spa-prerender!",
@@ -205,6 +216,8 @@ async function run(config) {
   );
 
   const screenshotOption = options.engine.gotoOptions.screenshot;
+  let outDir = options.outDir;
+  const buildDir = options.buildDir;
 
   let routes = options.routes;
   let foldersPaths = options.routes;
@@ -213,9 +226,27 @@ async function run(config) {
     typeof screenshotOption == "string" &&
     foldersPaths.push(screenshotOption);
 
+  // # Folders
+
+  if (options.keepOriginal && buildDir == outDir) {
+    outDir = `${buildDir}/pre-render`;
+  }
+
+  if (buildDir != outDir) {
+    try {
+      await fs.rmSync(outDir, { recursive: true, force: true });
+      await fse.copySync(buildDir, `${buildDir}_copy`, { overwrite: true });
+      await fs.renameSync(`${buildDir}_copy`, outDir);
+    } catch (err) {
+      console.error("error on create folders");
+      throw new Error(`error on create folders ${err}.`);
+    }
+  }
+
   foldersPaths.forEach(
-    async (route) => await ensureDirExists(`${options.outDir}${route}`)
+    async (route) => await ensureDirExists(`${outDir}${route}`)
   );
+  // #
 
   //insert "/index.html" and "/404.html" files
   if (options.seo) {
@@ -233,21 +264,11 @@ async function run(config) {
     routes = routes.filter((e) => excludedRoutes.indexOf(e) == -1);
   }
 
-  const staticServerURL = await runStaticServer(
-    options.port,
-    routes,
-    options.buildDir
-  );
+  const staticServerURL = await runStaticServer(options.port, routes, buildDir);
 
   if (!staticServerURL) return "server-error";
 
-  await runPuppeteer(
-    staticServerURL,
-    routes,
-    options.buildDir,
-    options.outDir,
-    options.engine
-  );
+  await runPuppeteer(staticServerURL, routes, outDir, options.engine);
 
   console.color(
     "Finish react-spa-prerender tasks!",
@@ -260,14 +281,14 @@ async function run(config) {
 }
 
 module.exports = {
-  run: async () => {
-    try {
-       const result = await run();
-      return result;
-    } catch (e) {
-      console.error("Error On Run");
-      console.error(e);
-      return e ?? "unknow-error";
-    }
-  },
+  run,
 };
+async function getCss(opt) {
+  const { pageUrl, browser, options } = opt;
+  const minimalcssResult = await minimalcss.minimize({
+    urls: [pageUrl],
+    browser: browser,
+    userAgent: options.userAgent,
+  });
+  return minimalcssResult.finalCss;
+}

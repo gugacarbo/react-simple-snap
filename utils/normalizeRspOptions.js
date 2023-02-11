@@ -4,6 +4,7 @@
  *    seo: true,
  *    buildDir: "/dist",
  *    outDir: "/dist",
+ *    keepOriginal: false,
  *    routes: ["/"],
  *    excludedRoutes: ["/excluded"]
  *    engine: {
@@ -14,12 +15,21 @@
  *      },
  *    }
  *  }} options
+ *    
+ *  if (options.viewport) {
+    //   await page.setViewport(options.viewport);
+    // }
+    // if (options.timeout !== undefined) {
+    //   await page.setDefaultNavigationTimeout(options.timeout);
+    // }
  */
 
 module.exports = function (options) {
   //* Defaults
   const engine = {};
   const seo = options.seo || true;
+  const keepOriginal = options.keepOriginal || true;
+
   const routes = options.routes || ["/"];
   const excludedRoutes = options.excludeRoutes || [];
   const port = options.port || 3000;
@@ -55,6 +65,7 @@ module.exports = function (options) {
   return {
     port,
     seo,
+    keepOriginal,
     routes,
     excludedRoutes,
     buildDir,

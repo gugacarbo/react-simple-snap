@@ -1,7 +1,7 @@
 {
   "buildDir": "/test/dist",
-  "outDir": "/test/preRender",
-  "seo": false,
+  "seo": true,
+  "port": 3332,
   "engine": {
     "gotoOptions": {
       "userAgent": "simple-snap",
