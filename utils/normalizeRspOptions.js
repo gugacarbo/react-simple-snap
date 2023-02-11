@@ -2,7 +2,8 @@
  * @param {{
  *    port: 3000,
  *    seo: true,
- *    buildDirectory: "/dist",
+ *    buildDir: "/dist",
+ *    outDir: "/dist",
  *    routes: ["/"],
  *    excludedRoutes: ["/excluded"]
  *    engine: {
@@ -23,9 +24,8 @@ module.exports = function (options) {
   const excludedRoutes = options.excludeRoutes || [];
   const port = options.port || 3000;
 
-  const buildDirectory = options.buildDirectory
-    ? `.${options.buildDirectory}`
-    : `./dist`;
+  const buildDir = options.buildDir ? `.${options.buildDir}` : `./dist`;
+  const outDir = options.outDir ? `.${options.outDir}` : buildDir;
 
   if (options.engine) {
     engine.launchOptions = options.engine.launchOptions || {};
@@ -48,7 +48,7 @@ module.exports = function (options) {
   engine.gotoOptions.waitUntil =
     options.engine.gotoOptions.waitUntil ?? "networkidle0";
 
-  //? puppeter.PagegotoOptions.screenshot = true
+  //? puppeter.Page.gotoOptions.screenshot = true
   engine.gotoOptions.screenshot = options.engine.gotoOptions.screenshot ?? true;
   //* Defaults
 
@@ -57,7 +57,8 @@ module.exports = function (options) {
     seo,
     routes,
     excludedRoutes,
-    buildDirectory,
+    buildDir,
+    outDir,
     engine,
   };
 };

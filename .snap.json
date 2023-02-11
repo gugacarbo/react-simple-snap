@@ -1,5 +1,7 @@
 {
-  "buildDirectory": "/testas",
+  "buildDir": "/test/dist",
+  "outDir": "/test/preRender",
+  "seo": false,
   "engine": {
     "gotoOptions": {
       "userAgent": "simple-snap",
