@@ -1,12 +1,4 @@
 {
-  "buildDir": "/test/dist",
-  "seo": true,
-  "port": 3332,
-  "engine": {
-    "gotoOptions": {
-      "userAgent": "simple-snap",
-      "waitUntil": "load"
-    }
-  },
-  "routes": ["/"]
+  "include": ["/"],
+  "screenshot": true
 }

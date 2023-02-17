@@ -2908,7 +2908,7 @@ puppeteer-core@19.7.1:
     unbzip2-stream "1.4.3"
     ws "8.11.0"
 
-puppeteer@^19.7.1:
+puppeteer@^19.6.3:
   version "19.7.1"
   resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-19.7.1.tgz#53c0234cac96f28934da139b0239237ccef3251a"
   integrity sha512-Hampj7jHlicySL1sSLHCwoFoRCi6RcEbnZmRE5brtbk0mp6Td33+9kWQD2eFs09772JIt00ybPKr50Gt7Y18Xg==
@@ -3452,6 +3452,11 @@ vary@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
+
+vibrant-console@^1.0.4:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/vibrant-console/-/vibrant-console-1.0.5.tgz#30dcc909cfd7b3c58dcc926b74324c4d99817e2b"
+  integrity sha512-68Nvlj+6CmV9u3HF958WDZVy+8ARslpCl6FABBe/d/ClrnbGgydkjHuAvwVIbVMWa2rpQAOXmlbwQEmFCYIZwg==
 
 walker@^1.0.8:
   version "1.0.8"

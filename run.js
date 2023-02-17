@@ -3,7 +3,6 @@
 const url = require("url");
 const { run } = require("./index.js");
 const {
-  reactSnap,
   homepage,
   devDependencies,
   dependencies,
@@ -41,7 +40,6 @@ if (parcel) {
 run({
   publicPath: publicUrl ? url.parse(publicUrl).pathname : "/",
   fixWebpackChunksIssue,
-  ...reactSnap,
 }).catch((error) => {
   console.error(error);
   process.exit(1);

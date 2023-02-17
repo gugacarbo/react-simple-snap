@@ -3,15 +3,23 @@
  * @param {{page: Page, options: {sourceMaps: boolean}, route: string, onError: ?function }} opt
  * @return {void}
  */
-const enableLogging = async (page, pageUrl, onError) => {
-  const route = pageUrl.slice(pageUrl.lastIndexOf("/"), pageUrl.length);
-  // const route = pageUrl;
+const mapStackTrace = require("sourcemapped-stacktrace-node").default;
 
+const errorToString = (jsHandle) =>
+  jsHandle.executionContext().evaluate((e) => e.toString(), jsHandle);
+
+const objectToJson = (jsHandle) => jsHandle.jsonValue();
+
+const enableLogging = async ({
+  page,
+  options,
+  route,
+  onError,
+  sourcemapStore,
+}) => {
   page.on("console", (msg) => {
     const text = msg.text();
-
     console.color("", "black", "black", "info", "hidden");
-
     if (text === "JSHandle@object") {
       console.color(`Route '${route}' Say:`, "white", "black", "info");
       Promise.all(msg.args().map(objectToJson)).then((args) =>
@@ -19,8 +27,8 @@ const enableLogging = async (page, pageUrl, onError) => {
       );
     } else if (text === "JSHandle@error") {
       console.error(`Route '${route}' Error:`);
-      Promise.all(
-        msg.args().map((args) => console.error(`>> ${args.message}`))
+      Promise.all(msg.args().map(errorToString)).then((args) =>
+        console.color(...args)
       );
     } else {
       console.color(`Route '${route}' Say:`, "white", "black", "info");
@@ -38,10 +46,34 @@ const enableLogging = async (page, pageUrl, onError) => {
   });
 
   page.on("pageerror", (e) => {
-    console.color("", "black", "black", "info", "hidden");
-    console.error(`At ${route}`);
-    console.error(`${e}`);
-    console.color("", "black", "black", "info", "hidden");
+    if (options.sourceMaps) {
+      mapStackTrace(e.stack || e.message, {
+        isChromeOrEdge: true,
+        store: sourcemapStore || {},
+      })
+        .then((result) => {
+          // TODO: refactor mapStackTrace: return array not a string, return first row too
+          const stackRows = result.split("\n");
+          const puppeteerLine =
+            stackRows.findIndex((x) => x.includes("puppeteer")) ||
+            stackRows.length - 1;
+
+          console.log(
+            `🔥  pageerror at ${route}: ${
+              (e.stack || e.message).split("\n")[0] + "\n"
+            }${stackRows.slice(0, puppeteerLine).join("\n")}`
+          );
+        })
+        .catch((e2) => {
+          console.error(`  pageerror at ${route}: ${e}`);
+          console.log(
+            `️️️⚠️  warning at ${route} (error in source maps):`,
+            e2.message
+          );
+        });
+    } else {
+      console.error(`pageerror at ${route}: \n${e}`);
+    }
     onError && onError();
   });
 

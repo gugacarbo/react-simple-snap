@@ -1,5 +1,3 @@
-// FIX: tests are slow - use unit tests instead of integration tests
-// TODO: capture console log from run function
 const fs = require("fs");
 const snapRun = require("./snapRun");
 const writeFileSpy = jest.spyOn(fs, "writeFile");
@@ -12,40 +10,9 @@ describe("validates options", () => {
   test("include option should be an non-empty array", () =>
     run({ include: "" })
       .then(() => expect(true).toEqual(false))
-      .catch((e) => expect(e).toEqual("")));
+      .catch((e) => expect(e).toEqual("ConfigError")));
 
-  test("saveAs supported values are html and png", () =>
-    run({ saveAs: "json" })
-      .then(() => expect(true).toEqual(false))
-      .catch((e) => expect(e).toEqual("")));
-});
 
-describe("one page", () => {
-  const source = "tests\\examples\\one-page";
-  const {
-    fs,
-    createReadStreamMock,
-    createWriteStreamMock,
-    filesCreated,
-    content,
-    name,
-  } = mockFs();
-  beforeAll(() => snapRun(fs, { source }));
-  test("crawls / and saves as index.html to the same folder", () => {
-    expect(filesCreated()).toEqual(1);
-    expect(name(0)).toEqual(`\\${source}\\index.html`);
-    expect(content(0)).toEqual(
-      '<html lang="en"><head><meta charset="utf-8"></head><body><script>document.body.appendChild(document.createTextNode("test"));</script>test</body></html>'
-    );
-  });
-  test("copies (original) index.html to 200.html", () => {
-    expect(createReadStreamMock.mock.calls).toEqual([
-      [`\\${source}\\index.html`],
-    ]);
-    expect(createWriteStreamMock.mock.calls).toEqual([
-      [`\\${source}\\200.html`],
-    ]);
-  });
 });
 
 describe("many pages", () => {

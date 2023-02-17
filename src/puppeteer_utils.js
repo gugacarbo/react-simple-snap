@@ -1,15 +1,14 @@
 const puppeteer = require("puppeteer");
 const _ = require("highland");
 const url = require("url");
-const mapStackTrace = require("sourcemapped-stacktrace-node").default;
 const path = require("path");
 const fs = require("fs");
 const { createTracker, augmentTimeoutError } = require("./tracker");
+const enableLogging = require("./enableLogging");
 
-const errorToString = (jsHandle) =>
-  jsHandle.executionContext().evaluate((e) => e.toString(), jsHandle);
+const color = require("vibrant-console");
+color();
 
-const objectToJson = (jsHandle) => jsHandle.jsonValue();
 
 /**
  * @param {{page: Page, options: {skipThirdPartyRequests: true}, basePath: string }} opt
@@ -32,74 +31,6 @@ const skipThirdPartyRequests = async (opt) => {
  * @param {{page: Page, options: {sourceMaps: boolean}, route: string, onError: ?function }} opt
  * @return {void}
  */
-const enableLogging = (opt) => {
-  const { page, options, route, onError, sourcemapStore } = opt;
-  page.on("console", (msg) => {
-    const text = msg.text();
-    if (text === "JSHandle@object") {
-      Promise.all(msg.args().map(objectToJson)).then((args) =>
-        console.log(`💬  console.log at ${route}:`, ...args)
-      );
-    } else if (text === "JSHandle@error") {
-      Promise.all(msg.args().map(errorToString)).then((args) =>
-        console.log(`💬  console.log at ${route}:`, ...args)
-      );
-    } else {
-      console.log(`️️️💬  console.log at ${route}:`, text);
-    }
-  });
-  page.on("error", (msg) => {
-    console.log(`🔥  error at ${route}:`, msg);
-    onError && onError();
-  });
-  page.on("pageerror", (e) => {
-    if (options.sourceMaps) {
-      mapStackTrace(e.stack || e.message, {
-        isChromeOrEdge: true,
-        store: sourcemapStore || {},
-      })
-        .then((result) => {
-          // TODO: refactor mapStackTrace: return array not a string, return first row too
-          const stackRows = result.split("\n");
-          const puppeteerLine =
-            stackRows.findIndex((x) => x.includes("puppeteer")) ||
-            stackRows.length - 1;
-
-          console.log(
-            `🔥  pageerror at ${route}: ${
-              (e.stack || e.message).split("\n")[0] + "\n"
-            }${stackRows.slice(0, puppeteerLine).join("\n")}`
-          );
-        })
-        .catch((e2) => {
-          console.log(`🔥  pageerror at ${route}:`, e);
-          console.log(
-            `️️️⚠️  warning at ${route} (error in source maps):`,
-            e2.message
-          );
-        });
-    } else {
-      console.log(`🔥  pageerror at ${route}:`, e);
-    }
-    onError && onError();
-  });
-  page.on("response", (response) => {
-    if (response.status() >= 400) {
-      let route = "";
-      try {
-        route = response._request
-          .headers()
-          .referer.replace(`http://localhost:${options.port}`, "");
-      } catch (e) {}
-      console.log(
-        `️️️⚠️  warning at ${route}: got ${response.status()} HTTP code for ${response.url()}`
-      );
-    }
-  });
-  // page.on("requestfailed", msg =>
-  //   console.log(`️️️⚠️  ${route} requestfailed:`, msg)
-  // );
-};
 
 /**
  * @param {{page: Page}} opt

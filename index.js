@@ -11,132 +11,13 @@ const url = require("url");
 const minimalcss = require("minimalcss");
 const CleanCSS = require("clean-css");
 const twentyKb = 20 * 1024;
-
-const defaultOptions = {
-  //# stable configurations
-  port: 45678,
-  source: "build",
-  destination: null,
-  concurrency: 4,
-  include: ["/"],
-  userAgent: "ReactSnap",
-  // 4 params below will be refactored to one: `puppeteer: {}`
-  // https://github.com/stereobooster/react-snap/issues/120
-  puppeteer: {
-    cache: true,
-    headless: true,
-  },
-  puppeteerArgs: [],
-  puppeteerExecutablePath: undefined,
-  puppeteerIgnoreHTTPSErrors: false,
-  publicPath: "/",
-  minifyCss: {},
-  minifyHtml: {
-    collapseBooleanAttributes: true,
-    collapseWhitespace: true,
-    decodeEntities: true,
-    keepClosingSlash: true,
-    sortAttributes: true,
-    sortClassName: false,
-  },
-  // mobile first approach
-  viewport: {
-    width: 480,
-    height: 850,
-  },
-  sourceMaps: true,
-  //# workarounds
-  // using CRA1 for compatibility with previous version will be changed to false in v2
-  fixWebpackChunksIssue: "CRA1",
-  removeBlobs: true,
-  fixInsertRule: true,
-  skipThirdPartyRequests: false,
-  cacheAjaxRequests: false,
-  http2PushManifest: false,
-  // may use some glob solution in the future, if required
-  // works when http2PushManifest: true
-  ignoreForPreload: ["service-worker.js"],
-  //# unstable configurations
-  preconnectThirdParty: true,
-  // Experimental. This config stands for two strategies inline and critical.
-  // TODO: inline strategy can contain errors, like, confuse relative urls
-  inlineCss: false,
-  //# feature creeps to generate screenshots
-  saveAs: "html", // | png | jpeg
-  crawl: true,
-  waitFor: false,
-  externalServer: false,
-  //# even more workarounds
-  removeStyleTags: false,
-  preloadImages: false,
-  // add async true to script tags
-  asyncScriptTags: false,
-  //# another feature creep
-  // tribute to Netflix Server Side Only React https://twitter.com/NetflixUIE/status/923374215041912833
-  // but this will also remove code which registers service worker
-  removeScriptTags: false,
-};
+const normalizeOptions = require("./src/normalizeOptions");
 
 /**
  *
  * @param {{source: ?string, destination: ?string, include: ?Array<string>, sourceMaps: ?boolean, skipThirdPartyRequests: ?boolean }} userOptions
  * @return {*}
  */
-const defaults = (userOptions) => {
-  const options = {
-    ...defaultOptions,
-    ...userOptions,
-  };
-  options.destination = options.destination || options.source;
-
-  let exit = false;
-  if (!options.include || !options.include.length) {
-    console.log("🔥  include option should be an non-empty array");
-    exit = true;
-  }
-  if (options.preloadResources) {
-    console.log(
-      "🔥  preloadResources option deprecated. Use preloadImages or cacheAjaxRequests"
-    );
-    exit = true;
-  }
-  if (options.minifyOptions) {
-    console.log("🔥  minifyOptions option renamed to minifyHtml");
-    options.minifyHtml = options.minifyOptions;
-  }
-  if (options.asyncJs) {
-    console.log("🔥  asyncJs option renamed to asyncScriptTags");
-    options.asyncScriptTags = options.asyncJs;
-  }
-  if (options.fixWebpackChunksIssue === true) {
-    console.log(
-      "🔥  fixWebpackChunksIssue - behaviour changed, valid options are CRA1, CRA2, Parcel, false"
-    );
-    options.fixWebpackChunksIssue = "CRA1";
-  }
-  if (
-    options.saveAs !== "html" &&
-    options.saveAs !== "png" &&
-    options.saveAs !== "jpeg"
-  ) {
-    console.log("🔥  saveAs supported values are html, png, and jpeg");
-    exit = true;
-  }
-  if (exit) throw new Error();
-  if (options.minifyHtml && !options.minifyHtml.minifyCSS) {
-    options.minifyHtml.minifyCSS = options.minifyCss;
-  }
-
-  if (!options.publicPath.startsWith("/")) {
-    options.publicPath = `/${options.publicPath}`;
-  }
-  options.publicPath = options.publicPath.replace(/\/$/, "");
-
-  options.include = options.include.map(
-    (include) => options.publicPath + include
-  );
-  return options;
-};
 
 const normalizePath = (path) => (path === "/" ? "/" : path.replace(/\/$/, ""));
 
@@ -644,7 +525,7 @@ const saveAsJpeg = ({ page, filePath, options, route }) => {
 const run = async (userOptions, { fs } = { fs: nativeFs }) => {
   let options;
   try {
-    options = defaults(userOptions);
+    options = await normalizeOptions(userOptions);
   } catch (e) {
     return Promise.reject(e.message);
   }
@@ -656,7 +537,7 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
   const startServer = (options) => {
     const app = express()
       .use(options.publicPath, serveStatic(sourceDir))
-      .use(fallback("index.html", { root: sourceDir }))
+      .use(fallback("index.html", { root: sourceDir }));
     const server = http.createServer(app);
     server.listen(options.port);
     return server;
@@ -664,7 +545,6 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
 
   if (
     destinationDir === sourceDir &&
-    options.saveAs === "html" &&
     fs.existsSync(path.join(sourceDir, "200.html"))
   ) {
     console.log(
@@ -677,7 +557,7 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
     fs.createWriteStream(path.join(sourceDir, "200.html"))
   );
 
-  if (destinationDir !== sourceDir && options.saveAs === "html") {
+  if (destinationDir !== sourceDir) {
     mkdirp.sync(destinationDir);
     fs.createReadStream(path.join(sourceDir, "index.html")).pipe(
       fs.createWriteStream(path.join(destinationDir, "200.html"))
@@ -698,8 +578,11 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
     publicPath,
     sourceDir,
     beforeFetch: async ({ page, route }) => {
-      const { preloadImages, cacheAjaxRequests, preconnectThirdParty } =
-        options;
+      const {
+        preloadImages,
+        cacheAjaxRequests,
+        preconnectThirdParty,
+      } = options;
       if (
         preloadImages ||
         cacheAjaxRequests ||
@@ -825,22 +708,23 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
 
       let routePath = route.replace(publicPath, "");
       let filePath = path.join(destinationDir, routePath);
-      if (options.saveAs === "html") {
-        await saveAsHtml({ page, filePath, options, route, fs });
-        let newRoute = await page.evaluate(() => location.toString());
-        newPath = normalizePath(
-          newRoute.replace(publicPath, "").replace(basePath, "")
-        );
-        routePath = normalizePath(routePath);
-        if (routePath !== newPath) {
-          console.log(newPath);
-          console.log(`💬  in browser redirect (${newPath})`);
-          addToQueue(newRoute);
-        }
-      } else if (options.saveAs === "png") {
-        await saveAsPng({ page, filePath, options, route, fs });
-      } else if (options.saveAs === "jpeg") {
+
+      await saveAsHtml({ page, filePath, options, route, fs });
+      let newRoute = await page.evaluate(() => location.toString());
+      newPath = normalizePath(
+        newRoute.replace(publicPath, "").replace(basePath, "")
+      );
+      routePath = normalizePath(routePath);
+      if (routePath !== newPath) {
+        console.log(newPath);
+        console.log(`💬  in browser redirect (${newPath})`);
+        addToQueue(newRoute);
+      }
+
+      if (options.screenshot === "jpeg") {
         await saveAsJpeg({ page, filePath, options, route, fs });
+      } else if (options.screenshot === "png" || options.screenshot) {
+        await saveAsPng({ page, filePath, options, route, fs });
       }
     },
     onEnd: () => {
@@ -873,5 +757,4 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
   });
 };
 
-exports.defaultOptions = defaultOptions;
 exports.run = run;
