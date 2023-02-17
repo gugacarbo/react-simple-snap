@@ -1,13 +1,13 @@
 const defaultOptions = {
   //# stable configurations
   port: 45678,
-  source: "build",
+  source: "dist",
   destination: null,
   concurrency: 4,
   include: ["/"],
   exclude: [],
   optionsFile: ".snap.json",
-  userAgent: "ReactSnap",
+  userAgent: "react-simple-snap",
   screenshot: false,
   puppeteer: {
     cache: true,
