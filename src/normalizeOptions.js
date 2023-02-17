@@ -1,18 +1,16 @@
-/**
- * @return {{
- *  }} options
- */
-
 const readConfig = require("./readOptionsFromFile");
 const defaultOptions = require("./defaultOptions");
-
-module.exports = async (userOptions) => {
+/**
+ * @param  {Object?} defaultOptions
+ * @return  {Object} defaultOptions
+ */
+module.exports = async (paramConfig) => {
   let exit = false;
 
-  const fileOptions = await readConfig(userOptions?.optionsFile);
+  const fileOptions = await readConfig(paramConfig?.optionsFile);
   let options = {
     ...fileOptions,
-    ...userOptions,
+    ...paramConfig,
   };
   if (!options.include || !options.include.length) {
     console.log("🔥 include option should be an non-empty array");

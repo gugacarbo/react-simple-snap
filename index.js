@@ -578,11 +578,8 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
     publicPath,
     sourceDir,
     beforeFetch: async ({ page, route }) => {
-      const {
-        preloadImages,
-        cacheAjaxRequests,
-        preconnectThirdParty,
-      } = options;
+      const { preloadImages, cacheAjaxRequests, preconnectThirdParty } =
+        options;
       if (
         preloadImages ||
         cacheAjaxRequests ||
