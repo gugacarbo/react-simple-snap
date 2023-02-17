@@ -1,0 +1,1 @@
+# 1.0.0 - Fork of react-snap at V1.23.0

@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`defaultOptions 1`] = `
+{
+  "asyncScriptTags": false,
+  "cacheAjaxRequests": false,
+  "concurrency": 4,
+  "crawl": true,
+  "destination": null,
+  "externalServer": false,
+  "fixInsertRule": true,
+  "fixWebpackChunksIssue": "CRA1",
+  "http2PushManifest": false,
+  "ignoreForPreload": [
+    "service-worker.js",
+  ],
+  "include": [
+    "/",
+  ],
+  "inlineCss": false,
+  "minifyCss": {},
+  "minifyHtml": {
+    "collapseBooleanAttributes": true,
+    "collapseWhitespace": true,
+    "decodeEntities": true,
+    "keepClosingSlash": true,
+    "sortAttributes": true,
+    "sortClassName": false,
+  },
+  "port": 45678,
+  "preconnectThirdParty": true,
+  "preloadImages": false,
+  "publicPath": "/",
+  "puppeteer": {
+    "cache": true,
+    "headless": true,
+  },
+  "puppeteerArgs": [],
+  "puppeteerExecutablePath": undefined,
+  "puppeteerIgnoreHTTPSErrors": false,
+  "removeBlobs": true,
+  "removeScriptTags": false,
+  "removeStyleTags": false,
+  "saveAs": "html",
+  "skipThirdPartyRequests": false,
+  "source": "build",
+  "sourceMaps": true,
+  "userAgent": "ReactSnap",
+  "viewport": {
+    "height": 850,
+    "width": 480,
+  },
+  "waitFor": false,
+}
+`;
