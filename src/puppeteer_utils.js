@@ -161,9 +161,9 @@ const crawl = async (opt) => {
         const page = await browser.newPage();
         //await page._client.send("ServiceWorker.disable");
         const client = await page.target().createCDPSession();
-        await client.send("Network.disable",);
+        await client.send("Network.disable");
         await page.setCacheEnabled(options.puppeteer.cache);
-        
+
         if (options.viewport) await page.setViewport(options.viewport);
         if (options.skipThirdPartyRequests)
           await skipThirdPartyRequests({ page, options, basePath });

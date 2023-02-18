@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const url = require("url");
+
 const { run } = require("./index.js");
 const {
   homepage,
@@ -10,7 +11,7 @@ const {
 
 const publicUrl = process.env.PUBLIC_URL || homepage;
 
-const reactScriptsVersion = parseInt(
+const reactScriptsVersioclsn = parseInt(
   (devDependencies && devDependencies["react-scripts"]) ||
     (dependencies && dependencies["react-scripts"])
 );
@@ -37,10 +38,12 @@ if (parcel) {
   }
 }
 
+//minimal css error. its using old puppeteer version
+
 run({
   publicPath: publicUrl ? url.parse(publicUrl).pathname : "/",
   fixWebpackChunksIssue,
 }).catch((error) => {
-  console.error(error);
+  console.log(error);
   process.exit(1);
 });

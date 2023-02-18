@@ -524,11 +524,8 @@ const saveAsJpeg = ({ page, filePath, options, route }) => {
 
 const run = async (userOptions, { fs } = { fs: nativeFs }) => {
   let options;
-  try {
-    options = await normalizeOptions(userOptions);
-  } catch (e) {
-    return Promise.reject(e.message);
-  }
+
+  options = await normalizeOptions(userOptions);
 
   const sourceDir = path.normalize(`${process.cwd()}/${options.source}`);
   const destinationDir = path.normalize(
@@ -566,6 +563,13 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
 
   const server = options.externalServer ? null : startServer(options);
 
+  const minimalcssErrorFixed = await verifyMinimalcssPuppeteerOldVersionError(
+    `http://localhost:${options.port}/`
+  );
+  if (!minimalcssErrorFixed) {
+    return Error("minimalcss error fix required");
+  }
+
   const basePath = `http://localhost:${options.port}`;
   const publicPath = options.publicPath;
   const ajaxCache = {};
@@ -578,8 +582,11 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
     publicPath,
     sourceDir,
     beforeFetch: async ({ page, route }) => {
-      const { preloadImages, cacheAjaxRequests, preconnectThirdParty } =
-        options;
+      const {
+        preloadImages,
+        cacheAjaxRequests,
+        preconnectThirdParty,
+      } = options;
       if (
         preloadImages ||
         cacheAjaxRequests ||
@@ -755,3 +762,22 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
 };
 
 exports.run = run;
+
+async function verifyMinimalcssPuppeteerOldVersionError(root) {
+  // await page._client.send("ServiceWorker.disable");
+  try {
+    const res = await minimalcss.minimize({
+      urls: [root],
+    });
+    return res;
+  } catch (e) {
+    console.color(
+      "[i:warning][c:white][s:bold][bg:red] Erro ESPERADO ao usar react-simple-snap"
+    );
+    console.log(e);
+    console.color(
+      "[i:warning] [s:bold][c:yellow] Veja a correção desse erro na documentação do projeto github.com/gugacarbo/react-simple-snap"
+    );
+    throw new Error("minimalcss package fix necessary");
+  }
+}
