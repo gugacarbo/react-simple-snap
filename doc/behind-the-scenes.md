@@ -1,20 +1,20 @@
-# Behind the scenes
+# Debaixo dos Panos...
 
-1. copies index.html as 200.html
-2. starts local web server with your application (by default uses `/build` as a root)
-3. visits `/` or any other pages listed in `include` configuration
-4. find all links on the page with the same domain, add them to queue
-5. If there is more than one page in the queue it also adds `/404.html` to the queue
-6. renders the page with the help of puppeteer
-7. waits till there are no active network requests for more than 0.5 second
-8. removes webpack chunks, if needed
-9. removes styles with blob URLs, if needed
-10. recreates text for style tags for CSS-in-JS solutions, if needed
-11. inlines critical CSS, if configured
-12. collects assets for http2 push manifest, if configured
-13. minifies HTML and saves it to the disk
-14. if `route` ends with `.html` it will be used as is, otherwise `route/index.html` is used
+1. Copia o arquivo index.html como 200.html
+2. Inicia um servidor web local com a sua aplicação (por 3. padrão, usa /build como raiz)
+3. Visita / ou quaisquer outras páginas listadas na 1.configuração include
+4. Encontra todos os links na página com o mesmo domínio e os adiciona à fila
+5. Se houver mais de uma página na fila, ele também adiciona /404.html à fila
+6. Renderiza a página com a ajuda do puppeteer
+7. Aguarda até que não haja mais solicitações de rede ativas por mais de 0,5 segundos
+8. Remove os pacotes do webpack, se necessário
+9. Remove os estilos com URLs de blob, se necessário
+10. Recria o texto para tags de estilo para soluções CSS-in-JS, se necessário
+11. Inclui o CSS crítico, se configurado
+12. Coleta recursos para o manifesto de push http2, se configurado
+13. Minifica o HTML e o salva no disco
+    Se route termina com .html, ele será usado como está, caso contrário, route/index.html será usado
 
-## Other features
+# Outras características
 
-- `react-snap` works concurrently, by default it uses 4 tabs in the browser. Can be configured with `concurrency` option.
+`react-simple-snap` trabalha em paralelo, por padrão, ele usa 4 guias no navegador. Pode ser configurado com a opção `concurrency`.

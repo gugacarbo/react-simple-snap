@@ -1,3 +1,5 @@
+`Readme from react-snap v1.23.0`
+
 # Load performance optimizations
 
 ## Works out of the box
@@ -50,10 +52,10 @@ Use `window.snapSaveState` callback to store `Apollo` state, so it can be used t
 
 ```js
 // Grab the state from a global variable injected into the server-generated HTML
-const preloadedState = window.__APOLLO_STORE__
+const preloadedState = window.__APOLLO_STORE__;
 
 // Allow the passed state to be garbage-collected
-delete window.__APOLLO_STORE__
+delete window.__APOLLO_STORE__;
 
 const client = new ApolloClient({
   initialState: preloadedState,
@@ -61,6 +63,6 @@ const client = new ApolloClient({
 
 // Tell react-snap how to save state
 window.snapSaveState = () => ({
-  "__APOLLO_STORE__": client.store.getState()
+  __APOLLO_STORE__: client.store.getState(),
 });
 ```

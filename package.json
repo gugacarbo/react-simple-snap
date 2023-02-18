@@ -1,6 +1,6 @@
 {
   "name": "react-simple-snap",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React library for prerendering static pages (snapshots), optimize SEO and web performance, Vite ready!",
   "main": "index.js",
   "repository": "https://github.com/gugacarbo/react-simple-snap.git",
@@ -44,6 +44,12 @@
   ],
   "keywords": [
     "react",
+    "react 18",
+    "react 18+",
+    "18+",
+    "18",
+    "V18",
+    "V18+",
     "react-static",
     "react-spa",
     "react-spa-prerender",
