@@ -11,10 +11,10 @@
 
 ## 🤖 Funcionalidades
 
-- Habilita **SEO** (Google, Bing, DuckDuckGo...) and **SMO** (Twitter, Facebook, Instagram) para SPAs.
+- Habilita **SEO** (Google, Bing, DuckDuckGo...) e **SMO** (Twitter, Facebook, Instagram) para SPAs.
 
 - Funciona com [create-react-app](https://github.com/facebookincubator/create-react-app) - sem alterações de código necessárias.
-- Funciona com [vite](hhttps://vitejs.dev/) - sem alterações de código necessárias.
+- Funciona com [vite](https://vitejs.dev/) - sem alterações de código necessárias.
 
 - Usa um **browser real** ([puppeteer](https://github.com/puppeteer/puppeteer/tree/main)) por de baixo dos panos, eliminando problemas de funcionalidades de HTML5 não suportadas , como WebGL or Blobs.
 - Várias **otimizações de desempenho de decarregamento da página**. [Details](doc/load-performance-optimizations.md), `english`.
@@ -38,7 +38,7 @@ A biblioteca minimalcss `0.11.3` usa versões antigas do puppeteer, e algumas fu
 
 Ao tentar usar a biblioteca react-simple-snap, um erro certamente ocorrerá.
 
-Após a instalação dos pacotes, você deve procurar na pasta `./node_modules` a a biblioteca `minimalcss` no arquivo `./minimalcss/src/run:454` e fazer a seguinte alteração
+Após a instalação dos pacotes, você deve procurar na pasta `./node_modules/` ou `./node_modules/react-simple-snap/` a a biblioteca `minimalcss` no arquivo `./minimalcss/src/run:454` e fazer a seguinte alteração
 
 ```js
 //Remover
@@ -130,7 +130,7 @@ Veja **[aqui](doc/options.md)** todas as configurações disponíveis.
 
 ## ⚠️ Atenção
 
-Para maioria dos apps, a instalação padrão do _react-simple-app_ ja é suficiente para tudo funcionar bem sem alterar nada no seu código.
+Para maioria dos apps, a instalação padrão do _react-simple-snap_ ja é suficiente para tudo funcionar bem sem alterar nada no seu código.
 
 Porém dependendo das estratégias e funcionalidades voce escolheu para seu app, alguns problemas podem acontecer.
 
@@ -265,7 +265,9 @@ Existem diversas soluções que você pode utilizar pra resolver esse tipo de pr
 Várias delas estão na [documentação do react-snap](https://github.com/stereobooster/react-snap).
 
 **Sabendo Que**
+
 `simple-snap` - Espera a página carregar.
+
 `hydrateRoot()` - renderiza instantâneamente a página. _(antes do useEffect)_
 
 **Você pode**
