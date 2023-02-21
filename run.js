@@ -11,7 +11,7 @@ const {
 
 const publicUrl = process.env.PUBLIC_URL || homepage;
 
-const reactScriptsVersioclsn = parseInt(
+const reactScriptsVersion = parseInt(
   (devDependencies && devDependencies["react-scripts"]) ||
     (dependencies && dependencies["react-scripts"])
 );
