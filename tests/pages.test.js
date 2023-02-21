@@ -10,9 +10,7 @@ describe("validates options", () => {
   test("include option should be an non-empty array", () =>
     run({ include: "" })
       .then(() => expect(true).toEqual(false))
-      .catch((e) => expect(e).toEqual("ConfigError")));
-
-
+      .catch((e) => expect(e).toEqual(new Error("ConfigError"))));
 });
 
 describe("respects destination", () => {

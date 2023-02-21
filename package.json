@@ -1,7 +1,7 @@
 {
   "name": "react-simple-snap",
-  "version": "1.0.2",
-  "description": "React library for prerendering static pages (snapshots), optimize SEO and web performance, Vite ready!",
+  "version": "1.0.3",
+  "description": "Biblioteca React para pré renderzar páginas estáticas (snapshots), SEO e performace de buscas otimizados!",
   "main": "index.js",
   "repository": "https://github.com/gugacarbo/react-simple-snap.git",
   "author": "gugacarbo <guga_carbo@hotmail.com>",
@@ -15,7 +15,7 @@
     "express-history-api-fallback": "^2.2.1",
     "highland": "^2.13.5",
     "html-minifier": "^4.0.0",
-    "minimalcss": "^0.11.3",
+    "minimalcss": "git+https://github.com/gugacarbo/minimalcss.git",
     "mkdirp": "^2.1.3",
     "puppeteer": "^19.6.3",
     "serve-static": "^1.15.0",

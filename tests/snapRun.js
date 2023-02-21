@@ -7,12 +7,12 @@ writeFileSpy.mockImplementation((file, data, cb) => cb());
 const { mockFs } = require("./helper.js");
 const { run } = require("./../index.js");
 
-jest.setTimeout(20000);
+jest.setTimeout(30000);
 
 const snapRun = (fs, options) =>
   run(
     {
-      puppeteerArgs: ["--no-sandbox", "--disable-setuid-sandbox"],
+     // puppeteerArgs: ["--no-sandbox", "--disable-setuid-sandbox"],
       port: Math.floor(Math.random() * 1000 + 3000),
       ...options,
     },

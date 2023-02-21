@@ -33,21 +33,6 @@ Mas com a versão 18 do React, o react-snap parou de funcionar, e sua ultima atu
 
 ## 🔥 Como usar
 
-**Antes de usar**
-A biblioteca minimalcss `0.11.3` usa versões antigas do puppeteer, e algumas funcionalidades mudaram.
-
-Ao tentar usar a biblioteca react-simple-snap, um erro certamente ocorrerá.
-
-Após a instalação dos pacotes, você deve procurar na pasta `./node_modules/` ou `./node_modules/react-simple-snap/` a a biblioteca `minimalcss` no arquivo `./minimalcss/src/run:454` e fazer a seguinte alteração
-
-```js
-//Remover
-//await page._client.send("ServiceWorker.disable");
-//Adicionar
-const client = await page.target().createCDPSession();
-await client.send("Network.disable");
-```
-
 ### Instalação
 
 ```sh

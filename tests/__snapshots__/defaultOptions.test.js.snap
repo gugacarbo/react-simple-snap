@@ -46,9 +46,9 @@ exports[`defaultOptions 1`] = `
   "saveAs": "html",
   "screenshot": false,
   "skipThirdPartyRequests": false,
-  "source": "build",
+  "source": "dist",
   "sourceMaps": true,
-  "userAgent": "ReactSnap",
+  "userAgent": "react-simple-snap",
   "viewport": {
     "height": 850,
     "width": 480,
