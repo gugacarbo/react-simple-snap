@@ -62,6 +62,18 @@ const defaultOptions = {
   // tribute to Netflix Server Side Only React https://twitter.com/NetflixUIE/status/923374215041912833
   // but this will also remove code which registers service worker
   removeScriptTags: false,
+  sitemap: false,
+  /*{
+    domain: "https://www.yourDomain.com/",
+    changefreq: "weekly",
+    priority: 1,
+    routes: {
+      "/contato": {
+        changefreq: "weekly",
+        priority: 0.5,
+      },
+    },
+  },*/
 };
 
 module.exports = defaultOptions;

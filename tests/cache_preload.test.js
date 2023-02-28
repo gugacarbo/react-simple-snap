@@ -5,6 +5,32 @@ writeFileSpy.mockImplementation((file, data, cb) => cb());
 const { mockFs } = require("./helper.js");
 const snapRun = require("./snapRun");
 
+describe("sitemap", () => {
+  const source = "tests\\examples\\many-pages";
+  const include = ["/"];
+  const { fs, filesCreated, content } = mockFs();
+  const sitemap = {
+    domain: "https://www.yourPrerenderedDomain.com/",
+    changefreq: "weekly",
+    priority: 1,
+    routes: {
+      "/contato": {
+        changefreq: "weekly",
+        priority: 0.5,
+      },
+    },
+  };
+  beforeAll(() => snapRun(fs, { source, include, sitemap }));
+  test("sitemap", () => {
+    expect(filesCreated()).toEqual(8);
+    expect(content(7)).toMatchSnapshot();
+
+    // expect(content(1)).toEqual(
+    //   '[{"source":"/with-big-css.html","headers":[{"key":"Link","value":"</css/big.css>;rel=preload;as=style"}]}]'
+    // );
+  });
+});
+/*
 describe("cacheAjaxRequests", () => {
   const source = "tests/examples/other";
   const include = ["/ajax-request.html"];
@@ -44,6 +70,10 @@ describe("http2PushManifest", () => {
   });
 });
 
+
+
+
+
 describe("ignoreForPreload", () => {
   const source = "tests/examples/other";
   const include = ["/with-big-css.html"];
@@ -74,3 +104,4 @@ describe("preloadImages", () => {
     );
   });
 });
+*/

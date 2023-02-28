@@ -225,7 +225,7 @@ const crawl = async (opt) => {
         process.removeListener("SIGINT", onSigint);
         process.removeListener("unhandledRejection", onUnhandledRejection);
         await browser.close();
-        onEnd && onEnd();
+        if (onEnd) await onEnd();
         if (shuttingDown) return reject("");
         resolve();
       });

@@ -12,7 +12,8 @@ const minimalcss = require("minimalcss");
 const CleanCSS = require("clean-css");
 const twentyKb = 20 * 1024;
 const normalizeOptions = require("./src/normalizeOptions");
-
+const { SitemapStream, streamToPromise } = require("sitemap");
+const { Readable } = require("stream");
 /**
  *
  * @param {{source: ?string, destination: ?string, include: ?Array<string>, sourceMaps: ?boolean, skipThirdPartyRequests: ?boolean }} userOptions
@@ -563,18 +564,16 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
 
   const server = options.externalServer ? null : startServer(options);
 
-  const minimalcssErrorFixed = await verifyMinimalcssPuppeteerOldVersionError(
-    `http://localhost:${options.port}/`
-  );
-  if (!minimalcssErrorFixed) {
-    return Error("minimalcss error fix required");
-  }
-
   const basePath = `http://localhost:${options.port}`;
   const publicPath = options.publicPath;
   const ajaxCache = {};
   const { http2PushManifest } = options;
   const http2PushManifestItems = {};
+
+  const sitemapOpt = options.sitemap;
+  const sitemapRoutes = sitemapOpt.routes ?? {};
+
+  const sitemapItems = [];
 
   await crawl({
     options,
@@ -606,6 +605,19 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
         );
         ajaxCache[route] = ac;
         http2PushManifestItems[route] = hpm;
+      }
+      if (sitemapOpt) {
+        const sm_url = route;
+        const sm_changefreq =
+          sitemapRoutes[route]?.changefreq ?? sitemapOpt.changefreq ?? "weekly";
+        const sm_priority =
+          sitemapRoutes[route]?.priority ?? sitemapOpt.priority ?? 1;
+
+        sitemapItems.push({
+          url: sm_url,
+          changefreq: sm_changefreq,
+          priority: sm_priority,
+        });
       }
     },
     afterFetch: async ({ page, route, browser, addToQueue }) => {
@@ -731,7 +743,7 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
         await saveAsPng({ page, filePath, options, route, fs });
       }
     },
-    onEnd: () => {
+    onEnd: async () => {
       if (server) server.close();
       if (http2PushManifest) {
         const manifest = Object.keys(http2PushManifestItems).reduce(
@@ -757,27 +769,23 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
           JSON.stringify(manifest)
         );
       }
+      if (sitemapOpt) {
+        // Create a stream to write to
+        const stream = new SitemapStream({ hostname: sitemapOpt.domain });
+
+        // Return a promise that resolves with your XML string
+        const createSitemap = await streamToPromise(
+          Readable.from(sitemapItems).pipe(stream)
+        );
+        const SitemapData = await createSitemap.toString();
+
+        fs.writeFileSync(
+          `${destinationDir}/sitemap-snap.xml`,
+          JSON.stringify(SitemapData)
+        );
+      }
     },
   });
 };
 
 exports.run = run;
-
-async function verifyMinimalcssPuppeteerOldVersionError(root) {
-  // await page._client.send("ServiceWorker.disable");
-  try {
-    const res = await minimalcss.minimize({
-      urls: [root],
-    });
-    return res;
-  } catch (e) {
-    console.color(
-      "[i:warning][c:white][s:bold][bg:red] Erro ESPERADO ao usar react-simple-snap"
-    );
-    console.log(e);
-    console.color(
-      "[i:warning] [s:bold][c:yellow] Veja a correção desse erro na documentação do projeto github.com/gugacarbo/react-simple-snap"
-    );
-    throw new Error("minimalcss package fix necessary");
-  }
-}

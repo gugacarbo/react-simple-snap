@@ -1,4 +1,4 @@
-# react-simple-snap [![Build Status](https://travis-ci.org/stereobooster/react-snap.svg?branch=master)](https://travis-ci.org/stereobooster/react-snap)
+# react-simple-snap [![Build Status](https://travis-ci.org/stereobooster/react-snap.svg?branch=master)](https://travis-ci.org/stereobooster/react-simple-snap)
 
 **Otimize o SEO e a Performace da sua SPA**
 
