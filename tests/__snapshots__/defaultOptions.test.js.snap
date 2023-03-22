@@ -45,6 +45,7 @@ exports[`defaultOptions 1`] = `
   "removeStyleTags": false,
   "saveAs": "html",
   "screenshot": false,
+  "sitemap": false,
   "skipThirdPartyRequests": false,
   "source": "dist",
   "sourceMaps": true,

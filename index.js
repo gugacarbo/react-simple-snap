@@ -182,8 +182,7 @@ const inlineCss = async (opt) => {
 
   if (cssSize > twentyKb)
     console.log(
-      `⚠️  warning: inlining CSS more than 20kb (${
-        cssSize / 1024
+      `⚠️  warning: inlining CSS more than 20kb (${cssSize / 1024
       }kb, ${cssStrategy})`
     );
 
@@ -537,7 +536,14 @@ const run = async (userOptions, { fs } = { fs: nativeFs }) => {
       .use(options.publicPath, serveStatic(sourceDir))
       .use(fallback("index.html", { root: sourceDir }));
     const server = http.createServer(app);
-    server.listen(options.port);
+    try {
+
+      server.listen(options.port);
+    } catch (e) {
+      server.listen(options.port + parseInt(Math.random() * 20));
+
+    }
+
     return server;
   };
 

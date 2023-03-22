@@ -12,8 +12,9 @@ jest.setTimeout(30000);
 const snapRun = (fs, options) =>
   run(
     {
-     // puppeteerArgs: ["--no-sandbox", "--disable-setuid-sandbox"],
+      // puppeteerArgs: ["--no-sandbox", "--disable-setuid-sandbox"],
       port: Math.floor(Math.random() * 1000 + 3000),
+      concurrency: 20,
       ...options,
     },
     {
