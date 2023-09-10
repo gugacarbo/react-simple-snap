@@ -1,6 +1,6 @@
 {
   "name": "react-simple-snap",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Biblioteca React para pré renderzar páginas estáticas (snapshots), SEO e performace de buscas otimizados!",
   "main": "index.js",
   "repository": "https://github.com/gugacarbo/react-simple-snap.git",
@@ -20,8 +20,7 @@
     "puppeteer": "^19.6.3",
     "serve-static": "^1.15.0",
     "sitemap": "^7.1.1",
-    "sourcemapped-stacktrace-node": "^2.1.8",
-    "vibrant-console": "^1.0.4"
+    "sourcemapped-stacktrace-node": "^2.1.8"
   },
   "devDependencies": {
     "dev-null-stream": "^0.0.1",

@@ -5,8 +5,6 @@ const path = require("path");
 const fs = require("fs");
 const { createTracker, augmentTimeoutError } = require("./tracker");
 const enableLogging = require("./enableLogging");
-const color = require("vibrant-console");
-color();
 
 /**
  * @param {{page: Page, options: {skipThirdPartyRequests: true}, basePath: string }} opt
